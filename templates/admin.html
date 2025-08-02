@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/static/styles_admin.css">
+  <script>
+    let allUsers = [];
+
+    async function loadUsers() {
+      const res = await fetch('/admin/users');
+      const data = await res.json();
+      allUsers = data.users;
+
+      document.getElementById('stats').innerHTML = `
+        <p><strong>Total Users:</strong> ${data.total_users}</p>
+        <p><strong>Active (last 10 days):</strong> ${data.active_users}</p>
+      `;
+
+      renderUserList(allUsers);
+    }
+
+    function renderUserList(users) {
+      const list = document.getElementById('user-list');
+      list.innerHTML = '';
+      users.forEach(u => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <a href="/admin/chat-history-page/${u.username}">
+            <button class="user-btn">${u.username}</button>
+          </a>
+          <span class="last-message">🗨️ ${u.last_message}</span>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    function filterUsers() {
+      const keyword = document.getElementById('search-box').value.toLowerCase();
+      const filtered = allUsers.filter(u => u.username.toLowerCase().includes(keyword));
+      renderUserList(filtered);
+    }
+
+    window.onload = loadUsers;
+  </script>
+
+</head>
+<body>
+  <div class="container">
+    <h2>Welcome Admin: {{ username }}</h2>
+    <div id="stats"></div>
+    <h3>User List</h3>
+
+    <input type="text" id="search-box" placeholder="Search by username..." oninput="filterUsers()">
+    <ul id="user-list"></ul>
+
+  </div>
+</body>
+</html>
