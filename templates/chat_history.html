@@ -1,72 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Chat History - {{ username }}</title>
-  <link rel="stylesheet" href="/static/styles_history.css">
-  <script>
-    async function toggleAI(username) {
-      const res = await fetch('/admin/toggle-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `username=${username}`
-      });
-      const data = await res.json();
-      alert(`AI toggled for ${data.username}. AI is now ${data.ai_enabled ? 'enabled' : 'disabled'}.`);
-    }
-
-    async function sendMessage(event) {
-      event.preventDefault();
-      const form = event.target;
-      const username = form.username.value;
-      const message = form.message.value;
-
-      if (!message.trim()) return;
-
-      const res = await fetch('/admin/send-message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `username=${encodeURIComponent(username)}&message=${encodeURIComponent(message)}`
-      });
-
-      if (res.ok) {
-        const now = new Date();
-        const timestamp = now.toISOString().slice(0, 19).replace('T', ' ');
-
-        const chatBox = document.getElementById('chat-box');
-        const div = document.createElement('div');
-        div.className = 'admin';
-        div.textContent = `[${timestamp}] ADMIN: ${message}`;
-        chatBox.appendChild(div);
-
-        form.message.value = '';
-        chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll
-      }
-    }
-  </script>
+    <title>Chat with {{ user.name }}</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div class="container">
-    <h2>Chat History with {{ username }}</h2>
+<h1>Chat with {{ user.name }} (Room {{ user.roomNumber }})</h1>
 
-    <button onclick="toggleAI('{{ username }}')" class="toggle-btn">Toggle AI</button>
+<form method="post" action="/toggle_ai/{{ user.key }}">
+    <label>AI Enabled:</label>
+    <input type="checkbox" name="enable" {% if user.get("ai_enabled", True) %}checked{% endif %} onchange="this.form.submit()">
+</form>
 
-    <div id="chat-box">
-      {% for msg in history %}
-        <div class="{{ msg.sender }}">
-          [{{ msg.timestamp }}] {{ msg.sender|upper }}: {{ msg.message }}
-        </div>
-      {% endfor %}
-    </div>
+<div class="chat-container">
+    {% for c in chats %}
+        <div class="user-msg"><b>User:</b> {{ c.user_message }}</div>
+        <div class="bot-msg"><b>Bot:</b> {{ c.bot_response }}</div>
+    {% endfor %}
+</div>
 
-    <form onsubmit="sendMessage(event)">
-      <input type="hidden" name="username" value="{{ username }}">
-      <textarea name="message" placeholder="Type admin message..."></textarea><br>
-      <button type="submit">Send</button>
-    </form>
-
-    <br>
-    <a href="/admin">⬅️ Back to Dashboard</a>
-  </div>
+<form method="post" action="/send_message/{{ user.key }}">
+    <input type="text" name="message" placeholder="Type message..." required>
+    <button type="submit">Send</button>
+</form>
 </body>
 </html>

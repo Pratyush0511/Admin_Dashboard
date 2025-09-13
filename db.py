@@ -4,14 +4,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MONGO_URL = os.getenv("MONGO_URI")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
+db = client["hotel_db"]
 
-if not MONGO_URL or not MONGO_DB_NAME:
-    raise RuntimeError("❌ MONGO_URL or MONGO_DB_NAME not set in .env")
-
-client = MongoClient(MONGO_URL)
-db = client[MONGO_DB_NAME]
-
-users_collection = db["users"]
+customers_collection = db["customers"]
 history_collection = db["history"]
